@@ -126,6 +126,20 @@ impl GPIO {
             *(reg_addr as *mut u32) = val;
         }
     }
+
+    fn get_level(&self, pin: u8) -> PinLevel {
+        let reg_num = pin / 32;
+        let bit_num: u8 = pin % 32;
+        let reg_addr: usize = self.base_addr as usize + 0x34 + 0x4 * reg_num as usize;
+
+        let val = unsafe { *(reg_addr as *const u32) };
+        let val = val & (1 << bit_num);
+
+        match val {
+            0 => PinLevel::Low,
+            _ => PinLevel::High,
+        }
+    }
 }
 
 fn main() {
@@ -135,8 +149,14 @@ fn main() {
         return;
     }
 
-    gpio.set_function(7, PinFunction::Output);
-    gpio.set_level(7, PinLevel::Low);
+    //gpio.set_function(7, PinFunction::Output);
+    //gpio.set_level(7, PinLevel::Low);
+
+    let level = gpio.get_level(7);
+    match level {
+        PinLevel::Low => println!("Pin 7 is Low"),
+        PinLevel::High => println!("Pin 7 is High"),
+    }
 
     let res = gpio.close();
     if !res {
